@@ -2,58 +2,74 @@ import { useState } from 'react'
 import { Search, Building2, User } from 'lucide-react'
 import { mockUnits } from '../data/mockData'
 
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px', backgroundColor: 'white',
+  border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14,
+  fontWeight: 500, color: '#0f172a', outline: 'none',
+}
+
+const selectStyle: React.CSSProperties = {
+  padding: '10px 14px', backgroundColor: 'white',
+  border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14,
+  fontWeight: 500, color: '#334155', outline: 'none', cursor: 'pointer',
+}
+
 export default function UnitsPage() {
   const [search, setSearch] = useState('')
   const [blockFilter, setBlockFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
 
-  const blocks = [...new Set(mockUnits.map((u) => u.block))]
+  const blocks = [...new Set(mockUnits.map(u => u.block))]
 
-  const filtered = mockUnits.filter((u) => {
-    const matchesSearch =
-      u.unitNumber.toLowerCase().includes(search.toLowerCase()) ||
-      (u.resident || '').toLowerCase().includes(search.toLowerCase())
-    const matchesBlock = blockFilter === 'ALL' || u.block === blockFilter
-    const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter
-    return matchesSearch && matchesBlock && matchesStatus
+  const filtered = mockUnits.filter(u => {
+    const q = search.toLowerCase()
+    return (
+      (u.unitNumber.toLowerCase().includes(q) || (u.resident || '').toLowerCase().includes(q)) &&
+      (blockFilter === 'ALL' || u.block === blockFilter) &&
+      (statusFilter === 'ALL' || u.status === statusFilter)
+    )
   })
 
-  const occupied = mockUnits.filter((u) => u.status === 'OCCUPIED').length
-  const vacant = mockUnits.filter((u) => u.status === 'VACANT').length
+  const occupied = mockUnits.filter(u => u.status === 'OCCUPIED').length
+  const vacant = mockUnits.filter(u => u.status === 'VACANT').length
 
   return (
-    <div className="space-y-6 max-w-7xl">
-      <div>
-        <h1 className="text-2xl font-black text-surface-900 tracking-tight">Unit Management</h1>
-        <p className="text-surface-500 text-sm mt-1 font-medium">
+    <div style={{ maxWidth: 1360, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.025em' }}>Unit Management</h1>
+        <p style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginTop: 6 }}>
           {occupied} occupied · {vacant} vacant · {mockUnits.length} total
         </p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {blocks.map((block) => {
-          const blockUnits = mockUnits.filter((u) => u.block === block)
-          const blockOccupied = blockUnits.filter((u) => u.status === 'OCCUPIED').length
+      {/* Block Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+        {blocks.map(block => {
+          const blockUnits = mockUnits.filter(u => u.block === block)
+          const blockOccupied = blockUnits.filter(u => u.status === 'OCCUPIED').length
+          const pct = (blockOccupied / blockUnits.length) * 100
+          const isActive = blockFilter === block
           return (
-            <div
-              key={block}
-              className="bg-white rounded-2xl p-4 border border-surface-100 hover:shadow-md transition-all cursor-pointer"
-              onClick={() => setBlockFilter(blockFilter === block ? 'ALL' : block)}
+            <div key={block}
+              onClick={() => setBlockFilter(isActive ? 'ALL' : block)}
+              style={{
+                backgroundColor: 'white', borderRadius: 14, padding: 20,
+                border: isActive ? '2px solid #722f37' : '1px solid #f1f5f9',
+                boxShadow: isActive ? '0 4px 16px rgba(114,47,55,0.12)' : '0 4px 20px rgba(15,23,42,0.04)',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Building2 className="w-4 h-4 text-primary-500" />
-                <span className="text-sm font-bold text-surface-800">{block}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <Building2 style={{ width: 16, height: 16, color: '#722f37' }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{block}</span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-surface-900">{blockOccupied}</span>
-                <span className="text-xs text-surface-400">/ {blockUnits.length} units</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 10 }}>
+                <span style={{ fontSize: 24, fontWeight: 900, color: '#0f172a' }}>{blockOccupied}</span>
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>/ {blockUnits.length} units</span>
               </div>
-              <div className="mt-2 h-1.5 rounded-full bg-surface-100 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-700 transition-all duration-500"
-                  style={{ width: `${(blockOccupied / blockUnits.length) * 100}%` }}
-                />
+              <div style={{ height: 5, borderRadius: 999, backgroundColor: '#f1f5f9', overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 999, width: `${pct}%`, background: 'linear-gradient(90deg, #9c4153, #5a252c)', transition: 'width 0.5s' }} />
               </div>
             </div>
           )
@@ -61,69 +77,69 @@ export default function UnitsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+          <Search style={{ width: 16, height: 16, position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           <input
-            type="text"
-            placeholder="Search by unit number or resident..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-200 bg-white text-sm font-medium focus-ring"
+            type="text" placeholder="Search by unit number or resident..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            style={{ ...inputStyle, paddingLeft: 36 }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#722f37'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(114,47,55,0.1)' }}
+            onBlur={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = 'none' }}
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl border border-surface-200 bg-white text-sm font-medium text-surface-700 appearance-none focus-ring"
-        >
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={selectStyle}>
           <option value="ALL">All Status</option>
           <option value="OCCUPIED">Occupied</option>
           <option value="VACANT">Vacant</option>
         </select>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filtered.map((unit) => (
-          <div
-            key={unit.id}
-            className={`bg-white rounded-2xl border p-5 transition-all duration-200 hover:shadow-lg group ${
-              unit.status === 'VACANT'
-                ? 'border-dashed border-surface-200 hover:border-primary-400 bg-surface-50/50'
-                : 'border-surface-100'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-black text-surface-900 group-hover:text-primary-700 transition-colors">{unit.unitNumber}</h3>
-                <p className="text-xs text-surface-400 font-medium">{unit.block}</p>
+      {/* Unit Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        {filtered.map(unit => {
+          const isVacant = unit.status === 'VACANT'
+          return (
+            <div key={unit.id}
+              style={{
+                backgroundColor: isVacant ? '#fafcff' : 'white',
+                borderRadius: 14, padding: 20,
+                border: isVacant ? '1.5px dashed #cbd5e1' : '1px solid #f1f5f9',
+                boxShadow: '0 4px 16px rgba(15,23,42,0.03)',
+                transition: 'all 0.2s', cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(15,23,42,0.08)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(15,23,42,0.03)'; e.currentTarget.style.transform = 'none' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>{unit.unitNumber}</h3>
+                  <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500, marginTop: 2 }}>{unit.block}</p>
+                </div>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999,
+                  backgroundColor: isVacant ? '#f1f5f9' : 'rgba(114,47,55,0.1)',
+                  color: isVacant ? '#64748b' : '#8b3d47',
+                }}>
+                  {unit.status}
+                </span>
               </div>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  unit.status === 'OCCUPIED' ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-100 text-surface-500'
-                }`}
-              >
-                {unit.status}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 border border-primary-100">
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, backgroundColor: '#f5e6e8', color: '#8b3d47', display: 'inline-block', marginBottom: 12 }}>
                 {unit.type}
               </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid #f8fafc' }}>
+                {unit.resident ? (
+                  <>
+                    <User style={{ width: 14, height: 14, color: '#94a3b8', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>{unit.resident}</span>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 13, color: '#cbd5e1', fontStyle: 'italic' }}>No resident assigned</span>
+                )}
+              </div>
             </div>
-            {unit.resident ? (
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-surface-50">
-                <User className="w-3.5 h-3.5 text-surface-400" />
-                <span className="text-sm font-medium text-surface-700">{unit.resident}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-surface-50">
-                <span className="text-sm text-surface-300 italic">No resident assigned</span>
-              </div>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

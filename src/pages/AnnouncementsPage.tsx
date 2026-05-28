@@ -2,10 +2,18 @@ import { useState } from 'react'
 import { Plus, Send, X, AlertTriangle, Info, Bell } from 'lucide-react'
 import { mockAnnouncements, type Announcement } from '../data/mockData'
 
-const priorityConfig: Record<string, { icon: typeof Info; color: string; badge: string }> = {
-  LOW: { icon: Info, color: 'text-surface-500', badge: 'bg-surface-100 text-surface-600 border border-surface-200' },
-  NORMAL: { icon: Bell, color: 'text-primary-600', badge: 'bg-primary-50 text-primary-700 border border-primary-100' },
-  URGENT: { icon: AlertTriangle, color: 'text-danger', badge: 'bg-danger/10 text-danger border border-danger/20' },
+type Priority = 'LOW' | 'NORMAL' | 'URGENT'
+
+const priorityConfig: Record<Priority, { Icon: typeof Info; iconColor: string; bg: string; color: string }> = {
+  LOW: { Icon: Info, iconColor: '#64748b', bg: '#f1f5f9', color: '#475569' },
+  NORMAL: { Icon: Bell, iconColor: '#8b3d47', bg: '#f5e6e8', color: '#8b3d47' },
+  URGENT: { Icon: AlertTriangle, iconColor: '#dc2626', bg: 'rgba(239,68,68,0.1)', color: '#dc2626' },
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '12px 16px', backgroundColor: 'white',
+  border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14,
+  fontWeight: 500, color: '#0f172a', outline: 'none',
 }
 
 export default function AnnouncementsPage() {
@@ -13,131 +21,126 @@ export default function AnnouncementsPage() {
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [priority, setPriority] = useState<'LOW' | 'NORMAL' | 'URGENT'>('NORMAL')
+  const [priority, setPriority] = useState<Priority>('NORMAL')
 
   const handleCreate = () => {
     if (!title.trim() || !body.trim()) return
-    const newAnnouncement: Announcement = {
-      id: String(Date.now()),
-      title: title.trim(),
-      body: body.trim(),
-      priority,
-      createdAt: new Date().toISOString(),
-      author: 'Estate Admin',
-    }
-    setAnnouncements([newAnnouncement, ...announcements])
-    setTitle('')
-    setBody('')
-    setPriority('NORMAL')
-    setShowForm(false)
+    setAnnouncements([{
+      id: String(Date.now()), title: title.trim(), body: body.trim(),
+      priority, createdAt: new Date().toISOString(), author: 'Estate Admin',
+    }, ...announcements])
+    setTitle(''); setBody(''); setPriority('NORMAL'); setShowForm(false)
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
+    <div style={{ maxWidth: 860, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, marginBottom: 28, flexWrap: 'wrap' }}>
         <div>
-          <h1 className="text-2xl font-black text-surface-900 tracking-tight">Announcements</h1>
-          <p className="text-surface-500 text-sm mt-1 font-medium">{announcements.length} announcements</p>
+          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.025em' }}>Announcements</h1>
+          <p style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginTop: 6 }}>{announcements.length} announcements</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 text-white text-sm font-bold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg shadow-primary-600/20 hover:shadow-primary-600/30 hover:-translate-y-0.5 active:translate-y-0"
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', backgroundColor: showForm ? '#ef4444' : '#722f37', color: 'white', borderRadius: 8, fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', boxShadow: `0 4px 12px ${showForm ? 'rgba(239,68,68,0.3)' : 'rgba(114,47,55,0.3)'}` }}
         >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {showForm ? <X style={{ width: 18, height: 18 }} /> : <Plus style={{ width: 18, height: 18 }} />}
           {showForm ? 'Cancel' : 'New Announcement'}
         </button>
       </div>
 
       {/* Create Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl border border-surface-100 p-6 space-y-4 animate-fade-in shadow-lg">
-          <h3 className="font-bold text-surface-900">Create Announcement</h3>
-          <div>
-            <label className="block text-sm font-semibold text-surface-700 mb-1.5">Title</label>
+        <div style={{ backgroundColor: 'white', borderRadius: 16, border: '1px solid #f1f5f9', padding: 28, marginBottom: 24, boxShadow: '0 8px 30px rgba(15,23,42,0.08)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>Create Announcement</h3>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 8 }}>Title</label>
             <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Announcement title..."
-              className="w-full px-4 py-3 rounded-xl border border-surface-200 bg-white text-sm font-medium focus-ring"
+              type="text" value={title} onChange={e => setTitle(e.target.value)}
+              placeholder="Announcement title..." style={inputStyle}
+              onFocus={e => { e.currentTarget.style.borderColor = '#722f37'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(114,47,55,0.1)' }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = 'none' }}
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-surface-700 mb-1.5">Message</label>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 8 }}>Message</label>
             <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Write your announcement..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-surface-200 bg-white text-sm font-medium focus-ring resize-none"
+              value={body} onChange={e => setBody(e.target.value)}
+              placeholder="Write your announcement..." rows={4}
+              style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }}
+              onFocus={e => { e.currentTarget.style.borderColor = '#722f37'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(114,47,55,0.1)' }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = 'none' }}
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-surface-700 mb-1.5">Priority</label>
-            <div className="flex gap-2">
-              {(['LOW', 'NORMAL', 'URGENT'] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPriority(p)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    priority === p
-                      ? p === 'URGENT'
-                        ? 'bg-danger text-white shadow-sm ring-2 ring-danger/20 ring-offset-1'
-                        : p === 'NORMAL'
-                        ? 'bg-primary-900 text-white shadow-sm ring-2 ring-primary-900/20 ring-offset-1'
-                        : 'bg-surface-800 text-white shadow-sm ring-2 ring-surface-800/20 ring-offset-1'
-                      : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 8 }}>Priority</label>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {(['LOW', 'NORMAL', 'URGENT'] as Priority[]).map(p => {
+                const isSelected = priority === p
+                const colors = { LOW: { bg: '#334155', shadow: '#334155' }, NORMAL: '#8b3d47', URGENT: '#dc2626' }
+                const color = typeof colors[p] === 'string' ? colors[p] as string : '#334155'
+                return (
+                  <button key={p} onClick={() => setPriority(p)}
+                    style={{
+                      padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                      border: isSelected ? 'none' : '1px solid #e2e8f0',
+                      backgroundColor: isSelected ? color : 'white',
+                      color: isSelected ? 'white' : '#475569',
+                      cursor: 'pointer', transition: 'all 0.15s',
+                      boxShadow: isSelected ? `0 4px 10px ${color}40` : 'none',
+                    }}
+                  >
+                    {p}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <button
             onClick={handleCreate}
             disabled={!title.trim() || !body.trim()}
-            className="flex items-center justify-center w-full gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 text-white text-sm font-bold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg shadow-primary-600/20 hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              width: '100%', padding: '13px 24px', backgroundColor: '#722f37',
+              color: 'white', borderRadius: 10, fontSize: 15, fontWeight: 700,
+              border: 'none', cursor: title.trim() && body.trim() ? 'pointer' : 'not-allowed',
+              opacity: title.trim() && body.trim() ? 1 : 0.5,
+              boxShadow: '0 4px 12px rgba(114,47,55,0.3)',
+            }}
           >
-            <Send className="w-4 h-4" />
-            Broadcast Announcement
+            <Send style={{ width: 18, height: 18 }} /> Broadcast Announcement
           </button>
         </div>
       )}
 
       {/* Announcements List */}
-      <div className="space-y-4">
-        {announcements.map((a) => {
-          const cfg = priorityConfig[a.priority]
-          const Icon = cfg.icon
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {announcements.map(a => {
+          const cfg = priorityConfig[a.priority as Priority]
+          const Icon = cfg.Icon
           return (
-            <div
-              key={a.id}
-              className="bg-white rounded-2xl border border-surface-100 p-6 hover:shadow-lg hover:border-surface-200 transition-all duration-300 group cursor-pointer"
+            <div key={a.id}
+              style={{ backgroundColor: 'white', borderRadius: 16, border: '1px solid #f1f5f9', padding: 24, boxShadow: '0 4px 20px rgba(15,23,42,0.04)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 30px rgba(15,23,42,0.08)'; e.currentTarget.style.borderColor = '#e2e8f0' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(15,23,42,0.04)'; e.currentTarget.style.borderColor = '#f1f5f9' }}
             >
-              <div className="flex items-start gap-4">
-                <div className={`mt-0.5 ${cfg.color} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-5 h-5" />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                <div style={{ marginTop: 2, flexShrink: 0 }}>
+                  <Icon style={{ width: 20, height: 20, color: cfg.iconColor }} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-surface-900 group-hover:text-primary-800 transition-colors">{a.title}</h3>
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{a.title}</h3>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, backgroundColor: cfg.bg, color: cfg.color }}>
                       {a.priority}
                     </span>
                   </div>
-                  <p className="text-sm text-surface-600 leading-relaxed font-medium">{a.body}</p>
-                  <div className="flex items-center gap-3 mt-4 text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                  <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.65, fontWeight: 500 }}>{a.body}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                     <span>{a.author}</span>
                     <span>·</span>
                     <span>
-                      {new Date(a.createdAt).toLocaleDateString('en-NG', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {new Date(a.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 </div>
